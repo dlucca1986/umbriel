@@ -8,7 +8,11 @@
 #include <csignal>
 #include <cstdlib>
 #include <filesystem>
+#if defined(__FreeBSD__)
+#include <sys/event.h>
+#elif defined(__linux__)
 #include <sys/syscall.h>
+#endif
 #include <sys/wait.h>
 #include <unistd.h>
 #include <wayland-server-core.h>
@@ -84,16 +88,33 @@ namespace umbriel {
     }
 
     m_pid = pid;
-    m_pidfd = static_cast<int>(syscall(SYS_pidfd_open, pid, 0));
-    if (m_pidfd < 0) {
+#if defined(__linux__)
+    m_processFd = static_cast<int>(syscall(SYS_pidfd_open, pid, 0));
+    if (m_processFd < 0) {
       kLog.error("pidfd_open failed for xwayland-satellite; crash respawn disabled");
     } else {
-      m_exitSource = wl_event_loop_add_fd(m_loop, m_pidfd, WL_EVENT_READABLE, onPidfd, this);
+      m_exitSource = wl_event_loop_add_fd(m_loop, m_processFd, WL_EVENT_READABLE, onProcessExit, this);
     }
+#elif defined(__FreeBSD__)
+    m_processFd = kqueue();
+    struct kevent change{};
+    EV_SET(&change, pid, EVFILT_PROC, EV_ADD | EV_ENABLE | EV_ONESHOT, NOTE_EXIT, 0, nullptr);
+    if (m_processFd < 0 || kevent(m_processFd, &change, 1, nullptr, 0, nullptr) < 0) {
+      kLog.error("kqueue process watch failed for xwayland-satellite; crash respawn disabled");
+      if (m_processFd >= 0) {
+        close(m_processFd);
+        m_processFd = -1;
+      }
+    } else {
+      m_exitSource = wl_event_loop_add_fd(m_loop, m_processFd, WL_EVENT_READABLE, onProcessExit, this);
+    }
+#else
+    kLog.warn("process watching is unavailable; xwayland-satellite crash respawn disabled");
+#endif
     kLog.info("xwayland-satellite spawned (pid {}) on DISPLAY={}", pid, m_display);
   }
 
-  int XwaylandSupervisor::onPidfd(int /*fd*/, uint32_t /*mask*/, void* data) {
+  int XwaylandSupervisor::onProcessExit(int /*fd*/, uint32_t /*mask*/, void* data) {
     static_cast<XwaylandSupervisor*>(data)->handleExit();
     return 0;
   }
@@ -108,19 +129,30 @@ namespace umbriel {
       wl_event_source_remove(m_exitSource);
       m_exitSource = nullptr;
     }
-    if (m_pidfd >= 0) {
-      close(m_pidfd);
-      m_pidfd = -1;
+    if (m_processFd >= 0) {
+      close(m_processFd);
+      m_processFd = -1;
     }
   }
 
   void XwaylandSupervisor::handleExit() {
     int exitStatus = -1;
-    if (m_pidfd >= 0) {
+    if (m_processFd >= 0) {
+#if defined(__linux__)
       siginfo_t info{};
-      if (waitid(P_PIDFD, static_cast<id_t>(m_pidfd), &info, WEXITED | WNOHANG) == 0 && info.si_code == CLD_EXITED) {
+      if (waitid(P_PIDFD, static_cast<id_t>(m_processFd), &info, WEXITED | WNOHANG) == 0
+          && info.si_code == CLD_EXITED) {
         exitStatus = info.si_status;
       }
+#elif defined(__FreeBSD__)
+      struct kevent event{};
+      struct timespec timeout{};
+      if (kevent(m_processFd, nullptr, 0, &event, 1, &timeout) == 1
+          && (event.fflags & NOTE_EXIT) != 0
+          && WIFEXITED(event.data)) {
+        exitStatus = WEXITSTATUS(event.data);
+      }
+#endif
     }
 
     // No waitpid needed: SIGCHLD is SIG_IGN, so the kernel reaps for us.

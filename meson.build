@@ -83,7 +83,10 @@ endif
 # jemalloc keeps a long-running compositor's heap compact: fewer arenas and fast page decay bound RSS. It interposes malloc only on glibc, so other libc builds
 # skip it (auto) or fail (enabled).
 jemalloc_option = get_option('jemalloc')
-is_glibc = cpp.get_define('__GLIBC__', prefix: '#include <features.h>') != ''
+is_glibc = false
+if cpp.has_header('features.h')
+  is_glibc = cpp.get_define('__GLIBC__', prefix: '#include <features.h>') != ''
+endif
 jemalloc_deps = []
 jemalloc_cpp_args = []
 
@@ -108,10 +111,24 @@ cairo_dep = dependency('cairo')
 pangocairo_dep = dependency('pangocairo')
 libdrm_dep = dependency('libdrm', version: '>=2.4.129')
 libudev_dep = dependency('libudev', required: false)
-native_drm_policy_supported = wlr_has_drm_backend and libudev_dep.found()
+native_drm_policy_supported = (
+  host_machine.system() == 'linux'
+  and wlr_has_drm_backend
+  and libudev_dep.found()
+)
 native_drm_policy_deps = []
 if native_drm_policy_supported
   native_drm_policy_deps += libudev_dep
+endif
+
+config_watcher_deps = []
+if host_machine.system() == 'freebsd'
+  libinotify_dep = dependency('libinotify', required: false)
+  if libinotify_dep.found()
+    config_watcher_deps += libinotify_dep
+  elif not cpp.has_function('inotify_init1', prefix: '#include <sys/inotify.h>')
+    error('FreeBSD requires native inotify support or the libinotify package')
+  endif
 endif
 add_project_arguments(
   '-DUMBRIEL_HAS_NATIVE_DRM_POLICY=' + native_drm_policy_supported.to_int().to_string(),
@@ -594,6 +611,7 @@ umbriel_core_deps = [
   pangocairo_dep,
   libdrm_dep,
   native_drm_policy_deps,
+  config_watcher_deps,
   nlohmann_json_dep,
   layer_shell_protocol_dep,
 ]

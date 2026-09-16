@@ -1,12 +1,12 @@
 #include "check.h"
 #include "config/store.h"
+#include "input/event_codes.h"
 
 #include <algorithm>
 #include <array>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
-#include <linux/input-event-codes.h>
 #include <optional>
 #include <string>
 #include <string_view>

@@ -1,9 +1,9 @@
 #include "input/shortcut_keysym.h"
 
 #include "check.h"
+#include "input/event_codes.h"
 
 #include <cstdint>
-#include <linux/input-event-codes.h>
 
 using umbriel::rawShortcutKeysym;
 

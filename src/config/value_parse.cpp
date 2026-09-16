@@ -4,6 +4,10 @@
 #include <charconv>
 #include <cmath>
 #include <cstddef>
+#include <iomanip>
+#include <locale>
+#include <sstream>
+#include <string>
 #include <system_error>
 
 namespace umbriel {
@@ -42,6 +46,22 @@ namespace umbriel {
     return true;
   }
 
+  bool parseDouble(std::string_view text, double& output) {
+    if (text.empty() || text.front() == '+') {
+      return false;
+    }
+
+    std::istringstream stream{std::string(text)};
+    stream.imbue(std::locale::classic());
+    double parsed = 0.0;
+    stream >> std::noskipws >> parsed;
+    if (stream.fail() || stream.peek() != std::char_traits<char>::eof() || !std::isfinite(parsed)) {
+      return false;
+    }
+    output = parsed;
+    return true;
+  }
+
   bool parseOutputMode(std::string_view text, OutputMode& output) {
     const size_t widthEnd = text.find('x');
     if (widthEnd == std::string_view::npos) {
@@ -73,11 +93,7 @@ namespace umbriel {
       if (refreshText.empty()) {
         return false;
       }
-      const auto [refreshPtr, refreshError] =
-          std::from_chars(refreshText.data(), refreshText.data() + refreshText.size(), refreshHz);
-      if (refreshError != std::errc{}
-          || refreshPtr != refreshText.data() + refreshText.size()
-          || !std::isfinite(refreshHz)) {
+      if (!parseDouble(refreshText, refreshHz)) {
         return false;
       }
     }

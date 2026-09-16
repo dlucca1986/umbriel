@@ -2,6 +2,7 @@
 
 #include "config/config.h"
 #include "core/log.h"
+#include "input/event_codes.h"
 #include "input/gestures.h"
 #include "input/seat.h"
 #include "layer/layer_surface.h"
@@ -21,7 +22,6 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
-#include <linux/input-event-codes.h>
 #include "wlr.h"
 // clang-format on
 #include "wlr/util/edges.h"

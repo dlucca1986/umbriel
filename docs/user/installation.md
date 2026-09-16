@@ -1,7 +1,7 @@
 # Installing Umbriel
 
 Umbriel is available for Arch Linux, Fedora, Debian, and Ubuntu. You can also
-[build it manually](#manual-build) on another Linux distribution.
+[build it manually](#manual-build) on another Linux distribution or FreeBSD.
 
 > Package ownership: the Umbriel team maintains the manual build instructions.
 > Distribution packages are maintained by their distributions or package
@@ -84,6 +84,11 @@ The repository provides `amd64` and `arm64` packages only.
 Manual installations have no automatic upgrade path. Prefer a distribution
 package when one is available.
 
+On FreeBSD, Umbriel uses implicit buffer synchronization because the DRM stack
+does not currently provide the syncobj event notification required by
+wlroots' explicit synchronization protocol. Linux builds continue to enable
+explicit synchronization when the renderer and backend support it.
+
 Install a C++23 compiler, Meson, Ninja, `just`, `pkg-config`,
 `wayland-scanner`, and the development packages listed in
 [`PACKAGING.md`](https://github.com/noctalia-dev/umbriel/blob/main/PACKAGING.md#dependencies).
@@ -104,6 +109,19 @@ install elsewhere:
 just prefix="$HOME/.local" release
 just install
 ```
+
+### FreeBSD
+
+Use FreeBSD's base Clang toolchain. Mixing GCC and libstdc++ with packaged C++
+libraries built against libc++ causes unresolved symbols at link time. FreeBSD
+14 also requires the `devel/libinotify` package for configuration file
+watching; Meson uses native inotify on releases that provide it. The build
+accepts either FreeBSD's base evdev header or the Linux-compatible header from
+`devel/evdev-proto`.
+
+Native `[drm]` GPU exclusion is unavailable on FreeBSD because that feature
+uses Linux udev identities and `/proc` metadata. Other compositor backends and
+the ordinary DRM path remain available through wlroots.
 
 ## Starting Umbriel
 

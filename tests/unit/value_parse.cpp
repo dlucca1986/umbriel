@@ -54,6 +54,28 @@ UMBRIEL_TEST(rejectsMalformedColors) {
   CHECK(color == before);
 }
 
+UMBRIEL_TEST(parsesLocaleIndependentDouble) {
+  double value = 0.0;
+  CHECK(umbriel::parseDouble("59.951", value));
+  CHECK(std::fabs(value - 59.951) < 0.000001);
+  CHECK(umbriel::parseDouble("-0.25", value));
+  CHECK(std::fabs(value + 0.25) < 0.000001);
+  CHECK(umbriel::parseDouble("1e-3", value));
+  CHECK(std::fabs(value - 0.001) < 0.000001);
+}
+
+UMBRIEL_TEST(rejectsMalformedDoubleWithoutChangingOutput) {
+  double value = 42.0;
+  CHECK(!umbriel::parseDouble("", value));
+  CHECK(!umbriel::parseDouble("+1.0", value));
+  CHECK(!umbriel::parseDouble(" 1.0", value));
+  CHECK(!umbriel::parseDouble("1.0 ", value));
+  CHECK(!umbriel::parseDouble("1.0x", value));
+  CHECK(!umbriel::parseDouble("nan", value));
+  CHECK(!umbriel::parseDouble("inf", value));
+  CHECK_EQ(value, 42.0);
+}
+
 UMBRIEL_TEST(parsesOutputModeWithoutRefresh) {
   umbriel::OutputMode mode{};
   CHECK(umbriel::parseOutputMode("1920x1080", mode));

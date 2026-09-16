@@ -151,6 +151,9 @@ honor_restored_maximize = false
 
 Use the optional `[drm]` section to keep GPUs unopened in a native session.
 Omit it to retain automatic GPU discovery. Changes require a restart.
+This policy is Linux-only because it relies on udev device identities and
+Linux `/proc` metadata. A configured `[drm]` section rejects a native FreeBSD
+session rather than silently ignoring the exclusions.
 
 ```toml
 [drm]

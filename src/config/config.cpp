@@ -12,7 +12,7 @@
 #include "umbriel_build_config.h"
 
 // clang-format off
-#include <linux/input-event-codes.h>
+#include "input/event_codes.h"
 #include <xkbcommon/xkbcommon.h>
 // clang-format on
 
@@ -458,8 +458,7 @@ namespace umbriel {
       for (size_t index = 1; index < tokens.size(); ++index) {
         const std::string_view token = tokens[index];
         double number = 0.0;
-        const auto [end, error] = std::from_chars(token.data(), token.data() + token.size(), number);
-        if (error != std::errc{} || end != token.data() + token.size() || !std::isfinite(number)) {
+        if (!parseDouble(token, number)) {
           warnAt(node->source(), R"(invalid number "{}" in {}.{})", token, context, key);
           return std::nullopt;
         }

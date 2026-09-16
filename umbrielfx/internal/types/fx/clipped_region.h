@@ -20,7 +20,7 @@ struct clipped_fregion {
     struct fx_corner_fradii corners;
 };
 
-static __always_inline bool clipped_fregion_is_valid(const struct clipped_fregion *fregion) {
+static inline bool clipped_fregion_is_valid(const struct clipped_fregion *fregion) {
 	return !fx_corner_fradii_is_empty(&fregion->corners) && !wlr_box_empty(&fregion->area);
 };
 

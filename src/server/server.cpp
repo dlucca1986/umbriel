@@ -290,6 +290,14 @@ namespace umbriel {
     m_rendererLost.notify = onRendererLost;
     wl_signal_add(&m_renderer->events.lost, &m_rendererLost);
 
+#if defined(__FreeBSD__)
+    // FreeBSD's DRM implementation advertises timeline syncobjs but does not
+    // provide DRM_IOCTL_SYNCOBJ_EVENTFD, which wlroots needs for explicit sync.
+    // Clear the renderer capability so protocol and scene setup consistently
+    // use implicit synchronization.
+    m_renderer->features.timeline = false;
+#endif
+
     if (!wlr_renderer_init_wl_shm(m_renderer, m_display)) {
       throw std::runtime_error("failed to initialize wl_shm");
     }

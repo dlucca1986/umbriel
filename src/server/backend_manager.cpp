@@ -1,5 +1,6 @@
 #include "server/backend_manager.h"
 
+#include "core/device_numbers.h"
 #include "core/log.h"
 #include "server/drm_policy.h"
 #include "wlr.h"
@@ -21,7 +22,6 @@
 #include <libudev.h>
 #include <string>
 #include <sys/stat.h>
-#include <sys/sysmacros.h>
 #include <vector>
 #include <xf86drm.h>
 #include <xf86drmMode.h>

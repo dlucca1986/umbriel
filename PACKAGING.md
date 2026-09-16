@@ -22,13 +22,17 @@ Use this short description for package metadata:
 | Session launcher | `start-umbriel`                                                   |
 | Wayland session | `umbriel.desktop`                                                 |
 
-Umbriel is Linux-only. The project flake builds `x86_64-linux` and
-`aarch64-linux` packages.
+Umbriel supports Linux and FreeBSD source builds. The project flake currently
+builds `x86_64-linux` and `aarch64-linux` packages.
 
 ## Build
 
 Umbriel requires a C++23 compiler and standard library. It uses Meson and
 Ninja, with `pkg-config` and `wayland-scanner` needed during configuration.
+
+FreeBSD builds disable DRM syncobj explicit synchronization because FreeBSD's
+DRM implementation does not provide the syncobj event notification required by
+wlroots. Linux builds retain runtime capability detection for explicit sync.
 
 A source tarball or `git archive` of a tag is complete.
 
@@ -59,6 +63,13 @@ meson test -C build
 `jemalloc` is optional and recommended on glibc. The `jemalloc` Meson feature
 defaults to `auto`. It is skipped on non-glibc systems.
 
+FreeBSD builds must use one consistent C++ standard library for Umbriel and
+packaged C++ dependencies such as tomlplusplus. The base Clang and libc++
+toolchain is the supported combination. FreeBSD releases without native
+inotify support require `devel/libinotify`; Meson links it when its pkg-config
+file is present. FreeBSD's base evdev header is accepted directly, while
+`devel/evdev-proto` remains a valid provider of the Linux-compatible path.
+
 ## umbrielfx
 
 Umbriel's scene graph and GLES2 renderer live in `umbrielfx/`, a hard fork of
@@ -80,7 +91,7 @@ distribution-provided LTO and archive member pruning.
 - wayland-protocols 1.47 or newer
 - xkbcommon
 - libinput 1.23 or newer
-- libudev, required for native `[drm]` GPU exclusion support
+- libudev, required for native `[drm]` GPU exclusion support on Linux
 - pixman 0.43 or newer
 - libdrm 2.4.129 or newer
 - Cairo and PangoCairo
@@ -89,6 +100,7 @@ distribution-provided LTO and archive member pruning.
 - EGL, GLES2, and GBM
 - lcms2, optional; without it `umbrielfx` rejects client ICC profiles and keeps only its parametric color transforms
 - jemalloc on glibc, optional
+- libinotify on FreeBSD systems without native inotify support
 
 The canonical dependency declarations are in [`meson.build`](meson.build).
 Distribution package names vary.

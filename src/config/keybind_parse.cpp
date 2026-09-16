@@ -1,9 +1,11 @@
 #include "config/keybind_parse.h"
 
+#include "config/value_parse.h"
+#include "input/event_codes.h"
+
 // <cmath> must precede the Wayland headers to avoid a libstdc++ 16 include-order failure.
 // clang-format off
 #include <cmath>
-#include <linux/input-event-codes.h>
 #include <xkbcommon/xkbcommon.h>
 // WLR_MODIFIER_* only. Pulling src/wlr.h would drag SceneFX and the renderer
 // into a translation unit that parses strings.
@@ -487,12 +489,7 @@ namespace umbriel {
           break;
         }
         double fraction = 0.0;
-        const auto [fractionPtr, fractionError] = std::from_chars(arg.data(), arg.data() + arg.size(), fraction);
-        if (fractionError != std::errc{}
-            || fractionPtr != arg.data() + arg.size()
-            || !std::isfinite(fraction)
-            || fraction < 0.1
-            || fraction > 1.0) {
+        if (!parseDouble(arg, fraction) || fraction < 0.1 || fraction > 1.0) {
           break;
         }
         output.action = spec.action;
@@ -508,12 +505,7 @@ namespace umbriel {
           arg.remove_prefix(1);
         }
         double delta = 0.0;
-        const auto [deltaPtr, deltaError] = std::from_chars(arg.data(), arg.data() + arg.size(), delta);
-        if (deltaError != std::errc{}
-            || deltaPtr != arg.data() + arg.size()
-            || !std::isfinite(delta)
-            || delta == 0.0
-            || std::fabs(delta) > 0.9) {
+        if (!parseDouble(arg, delta) || delta == 0.0 || std::fabs(delta) > 0.9) {
           break;
         }
         output.action = spec.action;

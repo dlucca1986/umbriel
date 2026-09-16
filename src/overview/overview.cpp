@@ -8,6 +8,7 @@ extern "C" {
 #include "config/config.h"
 #include "core/log.h"
 #include "input/cursor.h"
+#include "input/event_codes.h"
 #include "input/gestures.h"
 #include "input/seat.h"
 #include "layer/layer_surface.h"
@@ -27,7 +28,6 @@ extern "C" {
 #include <algorithm>
 #include <cmath>
 #include <limits>
-#include <linux/input-event-codes.h>
 #include <format>
 #include <ranges>
 #include <xkbcommon/xkbcommon.h>

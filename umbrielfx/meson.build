@@ -84,12 +84,18 @@ umbrielfx_sources += layer_shell_protocol_h
 umbrielfx_little_endian = target_machine.endian() == 'little'
 
 umbrielfx_c_args = [
-  '-D_POSIX_C_SOURCE=200809L',
   '-DWLR_USE_UNSTABLE',
   '-DWLR_PRIVATE=',
   '-DWLR_LITTLE_ENDIAN=@0@'.format(umbrielfx_little_endian.to_int()),
   '-DWLR_BIG_ENDIAN=@0@'.format((not umbrielfx_little_endian).to_int()),
 ]
+
+# FreeBSD exposes dladdr as a BSD extension. Its default environment includes
+# the POSIX interfaces used here too, while requesting POSIX alone hides
+# Dl_info from dlfcn.h.
+if host_machine.system() != 'freebsd'
+  umbrielfx_c_args += '-D_POSIX_C_SOURCE=200809L'
+endif
 
 # Keep wlr_log's __FILE__ output relative to the source root rather than
 # leaking the absolute build path.

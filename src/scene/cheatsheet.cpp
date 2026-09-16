@@ -1,6 +1,7 @@
 #include "scene/cheatsheet.h"
 
 #include "config/config.h"
+#include "input/event_codes.h"
 #include "scene/border_rect.h"
 #include "scene/cheatsheet_rows.h"
 #include "scene/color.h"
@@ -12,7 +13,6 @@
 #include <cmath>
 #include <format>
 #include <limits>
-#include <linux/input-event-codes.h>
 #include <string>
 #include <string_view>
 #include <vector>

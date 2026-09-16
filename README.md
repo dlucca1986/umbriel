@@ -82,6 +82,13 @@ always skip it).
 
 The binaries are written to `build-debug/umbriel` and `build-release/umbriel`.
 
+On FreeBSD, use the base Clang toolchain so Umbriel and C++ dependencies from
+packages use the same libc++ ABI. FreeBSD 14 also needs `devel/libinotify` for
+configuration file watching; newer systems with native inotify support do not.
+The build selects FreeBSD's evdev headers and kqueue process monitoring
+automatically. Native `[drm]` GPU exclusion remains Linux-only because it
+depends on Linux udev device identity and `/proc` metadata.
+
 ### Nix
 
 Build the package directly:

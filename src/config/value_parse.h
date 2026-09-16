@@ -19,6 +19,11 @@ namespace umbriel {
   // `output` untouched on any malformed input.
   bool parseColor(std::string_view text, std::array<float, 4>& output);
 
+  // Parse one finite, locale-independent decimal number. Leading whitespace
+  // and a leading plus sign are rejected to match floating-point from_chars.
+  // Returns false and leaves `output` untouched on malformed input.
+  bool parseDouble(std::string_view text, double& output);
+
   // "<width>x<height>" with an optional "@<hz>" suffix, e.g. "2560x1440@165" or
   // "1920x1080". Width and height are clamped to 1-16384, refresh to 0-1000 Hz.
   bool parseOutputMode(std::string_view text, OutputMode& output);

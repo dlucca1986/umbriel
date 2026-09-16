@@ -1,8 +1,8 @@
 #include "server/drm_policy.h"
 
 #include "check.h"
+#include "core/device_numbers.h"
 
-#include <sys/sysmacros.h>
 #include <vector>
 
 using umbriel::DrmDeviceIdentity;

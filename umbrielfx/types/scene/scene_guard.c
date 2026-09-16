@@ -1,4 +1,6 @@
+#ifdef __linux__
 #define _GNU_SOURCE
+#endif
 #include <dlfcn.h>
 #include <stdio.h>
 #include <wlr/types/wlr_output_layout.h>

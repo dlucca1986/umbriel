@@ -199,7 +199,7 @@ namespace umbriel {
           const auto directories = self->m_dirWatches.find(event->wd);
           if (directories != self->m_dirWatches.end()) {
             for (const std::filesystem::path& directory : directories->second) {
-              const std::filesystem::path path = (directory / event->name).lexically_normal();
+              const std::filesystem::path path = (directory / static_cast<const char*>(event->name)).lexically_normal();
               if (self->m_files.contains(path)) {
                 changed = true;
                 break;

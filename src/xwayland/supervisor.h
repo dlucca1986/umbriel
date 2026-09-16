@@ -15,9 +15,9 @@ namespace umbriel {
   // Keeps an xwayland-satellite process alive for the lifetime of the session. Umbriel does not implement X11 itself;
   // xwayland-satellite is a separate program that owns an X display and translates for it. All this class does is pick
   // a display number, spawn the process, notice when it dies, and restart it, with a failure budget, so a satellite
-  // that cannot start (missing Xwayland, wrong version) stops rather than spinning forever. Death is detected through a
-  // pidfd on the event loop rather than SIGCHLD: the compositor sets SIGCHLD to SIG_IGN so it never has to reap, and a
-  // pidfd gives the same notification without a signal handler racing the main loop.
+  // that cannot start (missing Xwayland, wrong version) stops rather than spinning forever. A process descriptor is
+  // watched on the event loop rather than SIGCHLD: the compositor sets SIGCHLD to SIG_IGN so it never has to reap, and
+  // a pidfd on Linux or kqueue on FreeBSD gives the same notification without a signal handler racing the main loop.
   class XwaylandSupervisor {
   public:
     XwaylandSupervisor(wl_event_loop* loop, std::string waylandSocket);
@@ -43,7 +43,7 @@ namespace umbriel {
     void spawn();
     void handleExit();
     void closeWatch();
-    static int onPidfd(int fd, uint32_t mask, void* data);
+    static int onProcessExit(int fd, uint32_t mask, void* data);
     static int onRespawnTimer(void* data);
 
     wl_event_loop* m_loop = nullptr;
@@ -52,7 +52,7 @@ namespace umbriel {
     std::string m_display;
     std::vector<std::pair<std::string, std::string>> m_environment;
     pid_t m_pid = -1;
-    int m_pidfd = -1;
+    int m_processFd = -1;
     wl_event_source* m_exitSource = nullptr;
     wl_event_source* m_respawnTimer = nullptr;
     int m_failures = 0;

@@ -1,11 +1,11 @@
 #include "config/keybind_parse.h"
 
 #include "check.h"
+#include "input/event_codes.h"
 
 // clang-format off
 // See the note in keybind_parse.cpp: <cmath> must precede the wayland chain.
 #include <cmath>
-#include <linux/input-event-codes.h>
 #include <xkbcommon/xkbcommon.h>
 #include <wlr/types/wlr_keyboard.h>
 // clang-format on

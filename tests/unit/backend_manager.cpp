@@ -1,6 +1,7 @@
 #include "server/backend_manager.h"
 
 #include "check.h"
+#include "core/device_numbers.h"
 #include "wlr.h"
 
 #include <algorithm>
@@ -13,7 +14,6 @@
 #include <optional>
 #include <string>
 #include <sys/stat.h>
-#include <sys/sysmacros.h>
 #include <vector>
 
 extern "C" {
