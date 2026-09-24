@@ -499,7 +499,8 @@ namespace umbriel {
     void syncFloatingResizePosition();
     void adoptFloatingClientSize();
     // Where `origin` has to move to satisfy the clamp, or nullopt if it already does. `contained` picks
-    // containFloatingOrigin (fully on screen) over clampFloatingOrigin (on-screen margin only).
+    // clampFloatingOriginForResize (full containment on an axis with no slack left) over clampFloatingOrigin
+    // (on-screen margin only, for drag/placement).
     [[nodiscard]] std::optional<FloatingPoint>
     floatingClampTarget(FloatingPoint origin, int width, int height, bool contained);
     std::optional<FloatingPoint> getFloatingPosition(

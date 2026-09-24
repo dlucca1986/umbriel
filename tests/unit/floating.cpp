@@ -6,6 +6,7 @@ using umbriel::anchoredContentOrigin;
 using umbriel::centeredOrigin;
 using umbriel::centeredOverShown;
 using umbriel::clampFloatingOrigin;
+using umbriel::clampFloatingOriginForResize;
 using umbriel::containFloatingOrigin;
 using umbriel::floatingFractionSize;
 using umbriel::FloatingGeometry;
@@ -207,6 +208,37 @@ UMBRIEL_TEST(containedAWindowFillingTheUsableAxisLosesItsStaleOffset) {
   const FloatingPoint contained = containFloatingOrigin({34, 54}, geo, usable);
   CHECK_EQ(contained.x, 0);
   CHECK_EQ(contained.y, 26);
+}
+
+UMBRIEL_TEST(resizeClampForcesContainmentOnlyOnAnAxisWithNoSlackLeft) {
+  // Same scenario as containedAWindowFillingTheUsableAxisLosesItsStaleOffset,
+  // through the function actually wired into resizeFloatingFractions.
+  const wlr_box usable{0, 26, 1366, 742};
+  const wlr_box geo{0, 0, 1366, 742};
+  const FloatingPoint clamped = clampFloatingOriginForResize({34, 54}, geo, usable);
+  CHECK_EQ(clamped.x, 0);
+  CHECK_EQ(clamped.y, 26);
+}
+
+UMBRIEL_TEST(resizeClampKeepsTheSliverHangWhenThereIsGenuineSlack) {
+  // A window well under the usable size, deliberately parked off the left
+  // edge (a window rule, say): shrinking it must not yank it on screen, the
+  // way plain containment would. Mirrors 162_floating_resize_animation.sh.
+  const wlr_box usable{0, 0, 1280, 720};
+  const wlr_box geo{0, 0, 256, 300};
+  const FloatingPoint origin{-192, 200};
+  CHECK_EQ(clampFloatingOriginForResize(origin, geo, usable).x, clampFloatingOrigin(origin, geo, usable).x);
+  CHECK_EQ(clampFloatingOriginForResize(origin, geo, usable).x, -192);
+}
+
+UMBRIEL_TEST(resizeClampAppliesPerAxisIndependently) {
+  // Width fills the usable axis (contained); height still has slack and keeps
+  // its off-screen hang (sliver).
+  const wlr_box usable{0, 0, 1280, 720};
+  const wlr_box geo{0, 0, 1280, 300};
+  const FloatingPoint clamped = clampFloatingOriginForResize({500, -5000}, geo, usable);
+  CHECK_EQ(clamped.x, 0);
+  CHECK_EQ(clamped.y, clampFloatingOrigin({500, -5000}, geo, usable).y);
 }
 
 UMBRIEL_TEST(containedPullsBackFromOffTheRight) {

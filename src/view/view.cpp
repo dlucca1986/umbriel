@@ -1859,7 +1859,7 @@ namespace umbriel {
     const wlr_box& geo = m_toplevel->base->geometry;
     const wlr_box box{.x = geo.x, .y = geo.y, .width = width, .height = height};
     const FloatingPoint clamped =
-        contained ? containFloatingOrigin(origin, box, usable) : clampFloatingOrigin(origin, box, usable);
+        contained ? clampFloatingOriginForResize(origin, box, usable) : clampFloatingOrigin(origin, box, usable);
     if (clamped.x == origin.x && clamped.y == origin.y) {
       return std::nullopt;
     }

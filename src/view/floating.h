@@ -64,6 +64,20 @@ namespace umbriel {
     };
   }
 
+  // For an explicit resize target: an axis whose new geometry already fills or exceeds the usable extent has no
+  // legitimate slack left to hang off screen with, so that axis contains fully instead. An axis with genuine slack
+  // keeps clampFloatingOrigin's sliver clamp, so a window resized while deliberately parked off screen (162's linear
+  // shrink toward an edge, say) keeps that placement instead of being yanked on screen the moment it is above 75px.
+  [[nodiscard]] constexpr FloatingPoint
+  clampFloatingOriginForResize(FloatingPoint origin, const wlr_box& geometry, const wlr_box& usable) {
+    const FloatingPoint sliver = clampFloatingOrigin(origin, geometry, usable);
+    const FloatingPoint contained = containFloatingOrigin(origin, geometry, usable);
+    return {
+        .x = geometry.width >= usable.width ? contained.x : sliver.x,
+        .y = geometry.height >= usable.height ? contained.y : sliver.y,
+    };
+  }
+
   // Where the window's content sits mid-resize. The edge being dragged moves and the opposite one stays put, which
   // matters because the client's geometry catches up asynchronously: without an anchor, a left- or top-edge drag would
   // visibly walk the far edge as each configure lands.
