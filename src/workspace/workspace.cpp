@@ -543,7 +543,9 @@ namespace umbriel {
 
   void Workspace::clampScrollToRange() {
     ScrollingLayout* scrolling = scrollingLayout();
-    if (scrolling == nullptr) {
+    // A centered rest position intentionally sits outside [0, maxScroll] (that is how an underfull strip gets
+    // centered); leave it alone here, the same trust targetScrollForEnsureVisible already gives it.
+    if (scrolling == nullptr || scrolling->centeredRest()) {
       return;
     }
     const auto maxScroll = static_cast<double>(scrolling->maxScroll(scrollViewportExtent()));
