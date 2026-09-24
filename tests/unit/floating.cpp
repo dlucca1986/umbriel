@@ -203,7 +203,7 @@ UMBRIEL_TEST(containedAWindowFillingTheUsableAxisLosesItsStaleOffset) {
   // clampFloatingOrigin's grabbable-sliver range is wide enough at that size
   // to leave a pre-resize offset in place, hanging the window off-screen.
   const wlr_box usable{0, 26, 1366, 742}; // a bar reserves the top 26px
-  const wlr_box geo{0, 0, 1366, 742}; // fills both usable axes exactly
+  const wlr_box geo{0, 0, 1366, 742};     // fills both usable axes exactly
   const FloatingPoint contained = containFloatingOrigin({34, 54}, geo, usable);
   CHECK_EQ(contained.x, 0);
   CHECK_EQ(contained.y, 26);

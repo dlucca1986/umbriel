@@ -1841,8 +1841,7 @@ namespace umbriel {
     return usable;
   }
 
-  std::optional<FloatingPoint>
-  View::floatingClampTarget(FloatingPoint origin, int width, int height, bool contained) {
+  std::optional<FloatingPoint> View::floatingClampTarget(FloatingPoint origin, int width, int height, bool contained) {
     if (m_tiled
         || !m_mapped
         || m_toplevel->scheduled.fullscreen
