@@ -6,6 +6,7 @@ using umbriel::anchoredContentOrigin;
 using umbriel::centeredOrigin;
 using umbriel::centeredOverShown;
 using umbriel::clampFloatingOrigin;
+using umbriel::containFloatingOrigin;
 using umbriel::floatingFractionSize;
 using umbriel::FloatingGeometry;
 using umbriel::floatingKeepVisible;
@@ -187,6 +188,46 @@ UMBRIEL_TEST(clampDoesNotInvertWhenTheBoundsCross) {
   // Low bound wins rather than the range being read backwards.
   CHECK_EQ(clamped.x, usable.x + floatingKeepVisible(0));
   CHECK_EQ(clamped.y, usable.y + floatingKeepVisible(0));
+}
+
+UMBRIEL_TEST(containedAWindowFullyOnScreenIsNotMoved) {
+  const wlr_box geo{0, 0, 800, 600};
+  const FloatingPoint origin{500, 300};
+  const FloatingPoint contained = containFloatingOrigin(origin, geo, kUsable);
+  CHECK_EQ(contained.x, 500);
+  CHECK_EQ(contained.y, 300);
+}
+
+UMBRIEL_TEST(containedAWindowFillingTheUsableAxisLosesItsStaleOffset) {
+  // Cycling a float to extent 1.0 sizes it to the usable axis, but
+  // clampFloatingOrigin's grabbable-sliver range is wide enough at that size
+  // to leave a pre-resize offset in place, hanging the window off-screen.
+  const wlr_box usable{0, 26, 1366, 742}; // a bar reserves the top 26px
+  const wlr_box geo{0, 0, 1366, 742}; // fills both usable axes exactly
+  const FloatingPoint contained = containFloatingOrigin({34, 54}, geo, usable);
+  CHECK_EQ(contained.x, 0);
+  CHECK_EQ(contained.y, 26);
+}
+
+UMBRIEL_TEST(containedPullsBackFromOffTheRight) {
+  const wlr_box geo{0, 0, 800, 600};
+  const FloatingPoint contained = containFloatingOrigin({5000, 300}, geo, kUsable);
+  CHECK_EQ(contained.x, kUsable.width - geo.width);
+}
+
+UMBRIEL_TEST(containedPullsBackFromOffTheLeft) {
+  const wlr_box geo{0, 0, 800, 600};
+  const FloatingPoint contained = containFloatingOrigin({-5000, 300}, geo, kUsable);
+  CHECK_EQ(contained.x, kUsable.x);
+}
+
+UMBRIEL_TEST(containedDoesNotInvertWhenTheWindowIsWiderThanUsable) {
+  const wlr_box usable{0, 0, 100, 100};
+  const wlr_box geo{0, 0, 800, 600};
+  const FloatingPoint contained = containFloatingOrigin({500, 500}, geo, usable);
+  // Low bound wins, same guard as clampFloatingOrigin above.
+  CHECK_EQ(contained.x, usable.x);
+  CHECK_EQ(contained.y, usable.y);
 }
 
 // Dialog placement

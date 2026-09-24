@@ -46,6 +46,24 @@ namespace umbriel {
     };
   }
 
+  // Keep a floating window fully on screen, unlike clampFloatingOrigin above
+  // (a drag clamp that only keeps a grabbable sliver visible). Needed for an
+  // explicit resize target: near full-usable size, that sliver margin covers
+  // almost the whole axis and would keep a stale pre-resize offset.
+  [[nodiscard]] constexpr FloatingPoint
+  containFloatingOrigin(FloatingPoint origin, const wlr_box& geometry, const wlr_box& usable) {
+    const auto clamp = [](int value, int low, int high) {
+      if (low > high) {
+        return low;
+      }
+      return value < low ? low : (value > high ? high : value);
+    };
+    return {
+        .x = clamp(origin.x, usable.x, usable.x + usable.width - geometry.width),
+        .y = clamp(origin.y, usable.y, usable.y + usable.height - geometry.height),
+    };
+  }
+
   // Where the window's content sits mid-resize. The edge being dragged moves and the opposite one stays put, which
   // matters because the client's geometry catches up asynchronously: without an anchor, a left- or top-edge drag would
   // visibly walk the far edge as each configure lands.

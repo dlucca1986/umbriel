@@ -1841,7 +1841,8 @@ namespace umbriel {
     return usable;
   }
 
-  std::optional<FloatingPoint> View::floatingClampTarget(FloatingPoint origin, int width, int height) {
+  std::optional<FloatingPoint>
+  View::floatingClampTarget(FloatingPoint origin, int width, int height, bool contained) {
     if (m_tiled
         || !m_mapped
         || m_toplevel->scheduled.fullscreen
@@ -1858,7 +1859,8 @@ namespace umbriel {
     }
     const wlr_box& geo = m_toplevel->base->geometry;
     const wlr_box box{.x = geo.x, .y = geo.y, .width = width, .height = height};
-    const FloatingPoint clamped = clampFloatingOrigin(origin, box, usable);
+    const FloatingPoint clamped =
+        contained ? containFloatingOrigin(origin, box, usable) : clampFloatingOrigin(origin, box, usable);
     if (clamped.x == origin.x && clamped.y == origin.y) {
       return std::nullopt;
     }
@@ -1871,14 +1873,14 @@ namespace umbriel {
     }
     const wlr_box& geo = m_toplevel->base->geometry;
     const FloatingPoint origin{.x = m_sceneTree->node.x, .y = m_sceneTree->node.y};
-    if (const auto clamped = floatingClampTarget(origin, geo.width, geo.height)) {
+    if (const auto clamped = floatingClampTarget(origin, geo.width, geo.height, false)) {
       setPosition(clamped->x, clamped->y);
     }
   }
 
   void View::clampFloatingPositionForSize(int width, int height) {
     const FloatingPoint origin{.x = layoutTargetX(), .y = layoutTargetY()};
-    if (const auto clamped = floatingClampTarget(origin, width, height)) {
+    if (const auto clamped = floatingClampTarget(origin, width, height, true)) {
       animateTo(clamped->x, clamped->y);
     }
   }
