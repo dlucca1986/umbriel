@@ -7,7 +7,6 @@ using umbriel::centeredOrigin;
 using umbriel::centeredOverShown;
 using umbriel::clampFloatingOrigin;
 using umbriel::clampFloatingOriginForResize;
-using umbriel::containFloatingOrigin;
 using umbriel::floatingFractionSize;
 using umbriel::FloatingGeometry;
 using umbriel::floatingKeepVisible;
@@ -191,75 +190,14 @@ UMBRIEL_TEST(clampDoesNotInvertWhenTheBoundsCross) {
   CHECK_EQ(clamped.y, usable.y + floatingKeepVisible(0));
 }
 
-UMBRIEL_TEST(containedAWindowFullyOnScreenIsNotMoved) {
-  const wlr_box geo{0, 0, 800, 600};
-  const FloatingPoint origin{500, 300};
-  const FloatingPoint contained = containFloatingOrigin(origin, geo, kUsable);
-  CHECK_EQ(contained.x, 500);
-  CHECK_EQ(contained.y, 300);
-}
-
-UMBRIEL_TEST(containedAWindowFillingTheUsableAxisLosesItsStaleOffset) {
-  // Cycling a float to extent 1.0 sizes it to the usable axis, but
-  // clampFloatingOrigin's grabbable-sliver range is wide enough at that size
-  // to leave a pre-resize offset in place, hanging the window off-screen.
-  const wlr_box usable{0, 26, 1366, 742}; // a bar reserves the top 26px
-  const wlr_box geo{0, 0, 1366, 742};     // fills both usable axes exactly
-  const FloatingPoint contained = containFloatingOrigin({34, 54}, geo, usable);
-  CHECK_EQ(contained.x, 0);
-  CHECK_EQ(contained.y, 26);
-}
-
-UMBRIEL_TEST(resizeClampForcesContainmentOnlyOnAnAxisWithNoSlackLeft) {
-  // Same scenario as containedAWindowFillingTheUsableAxisLosesItsStaleOffset,
-  // through the function actually wired into resizeFloatingFractions.
-  const wlr_box usable{0, 26, 1366, 742};
-  const wlr_box geo{0, 0, 1366, 742};
-  const FloatingPoint clamped = clampFloatingOriginForResize({34, 54}, geo, usable);
-  CHECK_EQ(clamped.x, 0);
-  CHECK_EQ(clamped.y, 26);
-}
-
-UMBRIEL_TEST(resizeClampKeepsTheSliverHangWhenThereIsGenuineSlack) {
-  // A window well under the usable size, deliberately parked off the left
-  // edge (a window rule, say): shrinking it must not yank it on screen, the
-  // way plain containment would. Mirrors 162_floating_resize_animation.sh.
-  const wlr_box usable{0, 0, 1280, 720};
-  const wlr_box geo{0, 0, 256, 300};
-  const FloatingPoint origin{-192, 200};
-  CHECK_EQ(clampFloatingOriginForResize(origin, geo, usable).x, clampFloatingOrigin(origin, geo, usable).x);
-  CHECK_EQ(clampFloatingOriginForResize(origin, geo, usable).x, -192);
-}
-
-UMBRIEL_TEST(resizeClampAppliesPerAxisIndependently) {
-  // Width fills the usable axis (contained); height still has slack and keeps
-  // its off-screen hang (sliver).
-  const wlr_box usable{0, 0, 1280, 720};
+UMBRIEL_TEST(resizeClampSnapsOnlyTheAxisTheWindowFills) {
+  // Width fills the usable axis and snaps to its edge; height has slack and
+  // keeps the ordinary on-screen clamp, off-screen hang included.
+  const wlr_box usable{0, 26, 1280, 694};
   const wlr_box geo{0, 0, 1280, 300};
   const FloatingPoint clamped = clampFloatingOriginForResize({500, -5000}, geo, usable);
   CHECK_EQ(clamped.x, 0);
   CHECK_EQ(clamped.y, clampFloatingOrigin({500, -5000}, geo, usable).y);
-}
-
-UMBRIEL_TEST(containedPullsBackFromOffTheRight) {
-  const wlr_box geo{0, 0, 800, 600};
-  const FloatingPoint contained = containFloatingOrigin({5000, 300}, geo, kUsable);
-  CHECK_EQ(contained.x, kUsable.width - geo.width);
-}
-
-UMBRIEL_TEST(containedPullsBackFromOffTheLeft) {
-  const wlr_box geo{0, 0, 800, 600};
-  const FloatingPoint contained = containFloatingOrigin({-5000, 300}, geo, kUsable);
-  CHECK_EQ(contained.x, kUsable.x);
-}
-
-UMBRIEL_TEST(containedDoesNotInvertWhenTheWindowIsWiderThanUsable) {
-  const wlr_box usable{0, 0, 100, 100};
-  const wlr_box geo{0, 0, 800, 600};
-  const FloatingPoint contained = containFloatingOrigin({500, 500}, geo, usable);
-  // Low bound wins, same guard as clampFloatingOrigin above.
-  CHECK_EQ(contained.x, usable.x);
-  CHECK_EQ(contained.y, usable.y);
 }
 
 // Dialog placement

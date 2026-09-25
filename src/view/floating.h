@@ -46,35 +46,14 @@ namespace umbriel {
     };
   }
 
-  // Keep a floating window fully on screen, unlike clampFloatingOrigin above
-  // (a drag clamp that only keeps a grabbable sliver visible). Needed for an
-  // explicit resize target: near full-usable size, that sliver margin covers
-  // almost the whole axis and would keep a stale pre-resize offset.
-  [[nodiscard]] constexpr FloatingPoint
-  containFloatingOrigin(FloatingPoint origin, const wlr_box& geometry, const wlr_box& usable) {
-    const auto clamp = [](int value, int low, int high) {
-      if (low > high) {
-        return low;
-      }
-      return value < low ? low : (value > high ? high : value);
-    };
-    return {
-        .x = clamp(origin.x, usable.x, usable.x + usable.width - geometry.width),
-        .y = clamp(origin.y, usable.y, usable.y + usable.height - geometry.height),
-    };
-  }
-
-  // For an explicit resize target: an axis whose new geometry already fills or exceeds the usable extent has no
-  // legitimate slack left to hang off screen with, so that axis contains fully instead. An axis with genuine slack
-  // keeps clampFloatingOrigin's sliver clamp, so a window resized while deliberately parked off screen (162's linear
-  // shrink toward an edge, say) keeps that placement instead of being yanked on screen the moment it is above 75px.
+  // clampFloatingOrigin for a resize target, except that an axis the window fills
+  // or overflows snaps to the usable edge rather than keeping its old offset.
   [[nodiscard]] constexpr FloatingPoint
   clampFloatingOriginForResize(FloatingPoint origin, const wlr_box& geometry, const wlr_box& usable) {
-    const FloatingPoint sliver = clampFloatingOrigin(origin, geometry, usable);
-    const FloatingPoint contained = containFloatingOrigin(origin, geometry, usable);
+    const FloatingPoint clamped = clampFloatingOrigin(origin, geometry, usable);
     return {
-        .x = geometry.width >= usable.width ? contained.x : sliver.x,
-        .y = geometry.height >= usable.height ? contained.y : sliver.y,
+        .x = geometry.width >= usable.width ? usable.x : clamped.x,
+        .y = geometry.height >= usable.height ? usable.y : clamped.y,
     };
   }
 

@@ -1841,7 +1841,7 @@ namespace umbriel {
     return usable;
   }
 
-  std::optional<FloatingPoint> View::floatingClampTarget(FloatingPoint origin, int width, int height, bool contained) {
+  std::optional<FloatingPoint> View::floatingClampTarget(FloatingPoint origin, int width, int height, bool resize) {
     if (m_tiled
         || !m_mapped
         || m_toplevel->scheduled.fullscreen
@@ -1859,7 +1859,7 @@ namespace umbriel {
     const wlr_box& geo = m_toplevel->base->geometry;
     const wlr_box box{.x = geo.x, .y = geo.y, .width = width, .height = height};
     const FloatingPoint clamped =
-        contained ? clampFloatingOriginForResize(origin, box, usable) : clampFloatingOrigin(origin, box, usable);
+        resize ? clampFloatingOriginForResize(origin, box, usable) : clampFloatingOrigin(origin, box, usable);
     if (clamped.x == origin.x && clamped.y == origin.y) {
       return std::nullopt;
     }
