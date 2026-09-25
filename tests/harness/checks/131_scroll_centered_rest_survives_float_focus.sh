@@ -1,9 +1,7 @@
 #!/usr/bin/env bash
-# center_focused="always" centers the strip on whichever column is focused. Toggling that column floating detaches it
-# from the layout, and Workspace::layoutDetach unconditionally clamps the scroll into [0, maxScroll] afterward, a
-# range a deliberately-centered offset (from an underfull strip) sits outside of. ensureFocusedVisible cannot repair
-# it afterward: focus now rests on a float, which has no column to re-center on. Workspace::clampScrollToRange must
-# leave a centered rest alone (ScrollingLayout::centeredRest()) instead of clamping it away.
+# With center_focused = "always", floating the centered column keeps the strip where it rests for the whole float
+# episode, because a float has no column to re-center on. The rest only survives while some remaining column can still
+# be centered there: floating the last column pulls the strip back onto the new last one.
 set -euo pipefail
 
 declare -A CLIENT_PID=()
@@ -91,4 +89,17 @@ if [[ $t1_x_final != "$t1_x_centered" ]]; then
   exit 1
 fi
 
-echo "the scrolling strip keeps its centered rest while focus moves through a float episode"
+# T3 is the last column, so its centered rest lies past maxScroll. Once it floats, T1 is alone and the strip has to
+# center it rather than keep resting where T3 was.
+"$UMBRIEL" msg "window-focus:$(id_of T3)" > /dev/null
+"$UMBRIEL" settle
+"$UMBRIEL" msg window-toggle-floating > /dev/null
+"$UMBRIEL" settle
+t1_x=$(field_of T1 x)
+t1_w=$(field_of T1 w)
+if ((t1_x != (1280 - t1_w) / 2)); then
+  echo "strip kept a stale centered rest after the last column floated: T1.x=$t1_x w=$t1_w"
+  exit 1
+fi
+
+echo "the scrolling strip keeps its centered rest through a float episode and recenters once the rest outlives its column"
