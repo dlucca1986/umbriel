@@ -1949,6 +1949,7 @@ namespace umbriel {
     // Cards stack tiled, then floating (populateCards): rebuild so this one
     // moves to its new layer instead of keeping its old spot.
     rebuildCard(view);
+    assignShortcuts();
   }
 
   void Overview::onViewUnmapped(View* view) {

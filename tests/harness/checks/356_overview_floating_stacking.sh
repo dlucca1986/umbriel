@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
-# window-toggle-floating on a tiled window while the overview is open must raise its card into the floating layer.
-# Overview::populateCards only orders cards tiled-then-floating once, at build time, and View::setFloating only told
-# the overview about a state change when it also happened to unpin a window, so an ordinary float toggle left the
-# card in its stale tiled position, hidden under a floating window that already covers the whole workspace.
+# window-toggle-floating on a tiled window while the overview is open raises its card into the floating layer, and the
+# overview it leaves matches one built fresh after the toggle, shortcut badges included.
 set -euo pipefail
 
 readonly CLIENT="${UMBRIEL_UNMAP_CLIENT:-./build-debug/tests/unmap-client}"
 readonly IMAGE="$UMBRIEL_RUNTIME_DIR/overview-floating-stacking.png"
+readonly FRESH="$UMBRIEL_RUNTIME_DIR/overview-floating-stacking-fresh.png"
 readonly BASE_COLOR=0xFFFF0000
 readonly TOGGLED_COLOR=0xFF0000FF
 
@@ -72,4 +71,15 @@ if ((bw == 0 && bh == 0)); then
   exit 1
 fi
 
-echo "a window toggled floating while the overview is open is raised above a floating window that was already there"
+"$UMBRIEL" msg overview-close > /dev/null
+"$UMBRIEL" settle
+"$UMBRIEL" msg overview-open > /dev/null
+"$UMBRIEL" settle
+grim "$FRESH"
+differing=$(magick compare -metric AE "$IMAGE" "$FRESH" null: 2>&1 || true)
+if [[ ${differing%% *} != 0 ]]; then
+  echo "the live toggle left the overview differing from a fresh one by ${differing%% *} pixels"
+  exit 1
+fi
+
+echo "a window toggled floating while the overview is open is raised above a floating window that was already there, as a fresh overview would show it"
